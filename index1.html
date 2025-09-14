@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MBA</title>
+  <meta name="description" content="Minimal portfolio with custom cursor, shaded tabs, and full-screen snap scrolling." />
+
+  <style>
+    :root{
+      --bg:#ffffff; --fg:#111; --muted:#e9e9e9; --soft:#f7f7f7; --link:#111;
+      --dim:.28;                 /* shaded look for idle tabs */
+      --ring:38px;               /* cursor ring size */
+      --dot:6px;                 /* cursor dot size */
+      --heroW: min(82vw, 1100px);
+      --heroH: calc(var(--heroW) * 0.52);
+    }
+
+    *{ box-sizing:border-box }
+    html,body{ height:100% }
+    html{ scroll-behavior:smooth } /* smooth programmatic scroll */
+    body{
+      margin:0; background:var(--bg); color:var(--fg);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    }
+    a{ color:var(--link); text-decoration:none }
+    a:focus-visible, button:focus-visible{ outline:2px dashed #999; outline-offset:4px }
+
+    .container{ max-width:1320px; margin:0 auto; padding:0 24px }
+    .row{ display:flex; align-items:center; justify-content:space-between; gap:16px }
+
+    /* ---------- Header / Tabs ---------- */
+    header{
+      position:sticky; top:0; z-index:20;
+      background:rgba(255,255,255,.96);
+      border-bottom:1px solid var(--muted);
+      backdrop-filter:saturate(180%) blur(8px);
+    }
+    .tabs{ display:flex; gap:28px; align-items:center; padding:14px 0 }
+    .tabs a{
+      font-size:13px; font-weight:700; letter-spacing:.04em;
+      opacity:var(--dim); filter:grayscale(1);
+      transition:opacity .18s ease, filter .18s ease;
+    }
+    .tabs a:hover, .tabs a:focus{ opacity:1; filter:none }
+    .meta{ display:flex; gap:18px; align-items:center; font-size:11px; opacity:.7 }
+
+    /* ---------- Scroll container & sections ---------- */
+    .scroller{
+      height:100vh; overflow-y:auto; scroll-snap-type:y mandatory; /* one panel per scroll */
+    }
+    section.panel{
+      min-height:100vh; scroll-snap-align:start;
+      display:grid; place-items:center; padding:48px 0 44px; position:relative;
+    }
+
+    /* ---------- Hero ---------- */
+/* Portrait-friendly hero frame for a headshot */
+.stage .frame{
+  /* a narrower, taller box works best for a headshot */
+  width: min(70vw, 520px);
+  aspect-ratio: 3 / 4;               /* portrait ratio; adjust to 4/5 or 2/3 if you like */
+  background:#000;
+  display:grid; place-items:center;
+  overflow:hidden;
+  box-shadow:0 10px 10px rgba(0,0,0,.06);
+  position:relative;
+}
+
+/* Make ANY image fit inside without distortion (no cropping) */
+.stage .frame img{
+  max-width:100%;
+  max-height:100%;
+  width:auto;
+  height:auto;
+  object-fit:contain;                 /* ensures the full headshot is visible */
+  display:block;
+}
+
+/* Title overlay (unchanged) */
+/* Make sure the frame is the positioning context */
+.stage .frame { position: relative; }
+
+/* Text bar pinned to the top of the image */
+.overlay-title{
+  position:absolute;
+  top:0; left:0; right:0;
+  display:flex;
+  justify-content:center;      /* center across the image */
+  align-items:flex-start;
+  padding:12px 16px;
+  pointer-events:none;         /* doesn’t block hover/clicks on the image */
+  /* Optional readability gradient over dark photos: */
+  background: linear-gradient(to bottom, rgba(0,0,0,.45), rgba(0,0,0,0));
+}
+
+.overlay-title h1{
+  margin:0;
+  color:#fff;                   /* white over the gradient */
+  font-weight:700;
+  letter-spacing:.35em;
+  text-transform:uppercase;
+  font-size:clamp(16px,2.2vw,22px);
+  text-align:center;
+}
+
+/* If you want it top-left instead of centered, add this utility: */
+.overlay-title.-left { justify-content:flex-start; }
+
+
+
+    /* ---------- Sample second/third panels ---------- */
+    .panel.alt{ background:var(--soft) }
+    .card{
+      border:1px solid var(--muted); background:#fff; border-radius:16px;
+      padding:24px 26px; box-shadow:0 8px 28px rgba(0,0,0,.05); max-width:900px;
+    }
+    .card h2{ margin:.2rem 0 0.6rem; letter-spacing:.05em }
+    .card p{ margin:0; color:#444; max-width:70ch }
+
+    /* ---------- Left nav dots ---------- */
+    .left-dots{
+      position:fixed; left:18px; top:50%; transform:translateY(-50%);
+      display:flex; flex-direction:column; gap:10px; z-index:30;
+    }
+    .left-dots button{
+      width:10px; height:10px; border-radius:50%; border:none; padding:0;
+      background:#cfcfcf; opacity:.9; cursor:pointer;
+      transition:transform .15s ease, background .15s ease;
+    }
+    .left-dots button[aria-current="true"]{ background:#000; transform:scale(1.2) }
+    .left-dots button:hover{ background:#111 }
+
+    /* ---------- Footer crumbs ---------- */
+    footer{ position:fixed; left:18px; bottom:16px; font-size:11px; opacity:.7; z-index:10 }
+    .sound{ position:fixed; right:28px; bottom:16px; font-size:11px; opacity:.7; z-index:10 }
+
+    /* ---------- Custom cursor ---------- */
+    @media (pointer:fine){
+      body{ cursor:none }
+      .cursor-dot, .cursor-ring{
+        position:fixed; top:0; left:0; pointer-events:none; z-index:9999;
+        transform:translate(-50%, -50%); mix-blend-mode:difference;
+      }
+      .cursor-dot{ width:var(--dot); height:var(--dot); border-radius:50%; background:#fff }
+      .cursor-ring{
+        width:var(--ring); height:var(--ring); border-radius:50%;
+        border:1.8px solid #fff; opacity:.75;
+        transition:transform .12s ease, opacity .2s ease;
+      }
+      .cursor-ring.-hover{ transform:translate(-50%,-50%) scale(1.35) }
+    }
+
+    /* ---------- Mobile ---------- */
+    @media (max-width: 760px){
+      .tabs{ gap:18px } .meta{ display:none }
+      .left-dots{ display:none } .sound{ right:16px }
+      .stage .frame{ width:min(92vw,720px); height:calc(min(92vw,720px)*.56) }
+    }
+    /* ===== Timeline (Info panel) ===== */
+.timeline{
+  --line:#e6e7eb; --dot:#111; --card-bg:#fff;
+  max-width: 1100px; width:100%; margin: 0 auto; padding: 24px 10px;
+  position: relative;
+}
+.timeline::before{
+  content:""; position:absolute; top:0; bottom:0; left:50%;
+  width:3px; background:var(--line); transform:translateX(-50%);
+}
+.timeline ol{ list-style:none; margin:0; padding:0 }
+.timeline li{
+  position:relative; margin: 36px 0; opacity:0; transform: translateY(18px);
+  transition: transform .5s ease, opacity .5s ease;
+}
+.timeline li.in-view{ opacity:1; transform:none }
+
+/* Dot on the center line 
+.timeline li::before{
+  content:""; position:absolute; top:14px; left:50%; transform:translate(-50%, -50%);
+  width:13px; height:13px; border-radius:50%; background:var(--dot);
+  box-shadow: 0 0 0 4px #fff, 0 0 0 8px var(--line);
+}*/
+/* kill the center dots */
+.timeline li::before { content: none !important; }
+
+/* Card (alternating sides) */
+.tl-card{
+  position:relative; background:var(--card-bg); border:1px solid var(--line);
+  border-radius:14px; padding:16px 18px; box-shadow:0 8px 24px rgba(0,0,0,.05);
+  width: calc(50% - 48px);
+}
+.timeline li:nth-child(odd) .tl-card{ margin-left: calc(50% + 48px) }
+.timeline li:nth-child(even) .tl-card{ margin-right: calc(50% + 48px) }
+
+.tl-card time{ display:block; font-size:12px; letter-spacing:.08em; color:#666; margin-bottom:6px }
+.tl-card h3{ margin:.1rem 0 .35rem; font-size:18px; letter-spacing:.02em }
+.tl-card p{ margin:0; color:#444 }
+
+/* Mobile: stack to one side */
+@media (max-width: 760px){
+  .timeline::before{ left:24px; }
+  .timeline li::before{ left:24px; transform:translate(-50%, -50%); }
+  .tl-card{ width:auto; margin-left:48px; margin-right:0 }
+  .timeline li:nth-child(odd) .tl-card,
+  .timeline li:nth-child(even) .tl-card{ margin-left:48px }
+}
+/* Timeline color scheme by type */
+.tl-card.work{
+  background:#f5f6f7;          /* light gray */
+  border-color:#e3e7ec;
+}
+.tl-card.edu{
+  background:#ffe9ec;          /* light red */
+  border-color:#ffcfd6;
+}
+
+/* optional: a subtle left accent bar */
+.tl-card.work::after,
+.tl-card.edu::after{
+  content:"";
+  position:absolute; left:-6px; top:14px; bottom:14px; width:4px; border-radius:2px;
+}
+.tl-card.work::after{ background:#cfd6de; }
+.tl-card.edu::after{  background:#ffb5bf; }
+
+/* Enlarge the square card and reveal details */
+	.tl-card{
+  	position: relative;
+  	cursor: pointer;
+  	transition: transform .18s ease, box-shadow .18s ease;
+  	outline: none;             /* we’ll style focus below */
+  	z-index: 1;
+	}
+	.tl-card:hover,
+	.tl-card:focus-within,
+	.tl-card.is-expanded{
+  	transform: scale(1.03);
+  	box-shadow: 0 14px 36px rgba(0,0,0,.12);
+ 	 z-index: 3;
+	}
+
+	/* Accessible focus ring */
+	.tl-card:focus-visible{
+  	outline: 2px dashed #9aa1a8;
+ 	 outline-offset: 4px;
+	}
+
+	/* Hidden details by default */
+	.tl-card .details{
+  	margin-top: 10px;
+  	max-height: 0;
+  	opacity: 0;
+  	overflow: hidden;
+  	transition: max-height .3s ease, opacity .2s ease;
+	}
+
+	/* Show on hover / focus / expanded */
+	.tl-card:hover .details,
+	.tl-card:focus-within .details,
+	.tl-card.is-expanded .details{
+	  max-height: 480px;  /* adjust if you have longer lists */
+	  opacity: 1;
+	}
+
+	/* Keep your type backgrounds */
+	.tl-card.work{ background:#f5f6f7; border:1px solid #e3e7ec; border-radius:12px; }
+	.tl-card.edu { background:#ffe9ec; border:1px solid #ffcfd6; border-radius:12px; }
+
+	/* Optional: nicer bullet spacing */
+	.tl-card .details ul{ margin:0; padding:0 0 0 18px; }
+	.tl-card .details li{ margin:6px 0; line-height:1.45; }
+
+  </style>
+</head>
+<body>
+
+  <!-- Header (sticky inside scroller) -->
+<header>
+  <div class="container row">
+    <nav class="tabs" aria-label="Primary">
+      <a href="#s1">HOME</a>
+      <a href="#s2">INFO</a>
+      <a href="#s3">MORE PROJECTS</a>
+    </nav>
+    <div class="meta" aria-label="Location & time">
+      <span id="temp">--°F</span>
+      <span id="city">COLUMBUS</span>
+      <span id="clock">--:-- --</span>
+    </div>
+  </div>
+</header>
+
+
+  <!-- Scroll-snap container -->
+  <div class="scroller" id="scroller">
+
+    <!-- Panel 1: Hero -->
+    <section id="s1" class="panel stage" aria-label="Hero">
+      <figure class="frame">
+        <img src="Headshot.png" alt="d" />
+        <div class="overlay-title"><h1>Matheus Fagundes</h1></div>
+      </figure>
+    </section>
+
+    <!-- Panel 2: Info -->
+    <section id="s2" class="panel alt" aria-label="Info timeline">
+  <div class="timeline" id="timeline">
+    <ol>
+      <!-- Work -->
+      <li>
+        <div class="tl-card work" role="button" tabindex="0" aria-expanded="false">
+          <time>Jun–Aug 2025</time>
+          <h3>JPMorgan Chase — Strategy Consulting Intern</h3>
+          <div class="details">
+            <ul>
+              <li>Built project charter & governance cadence across Connected Commerce.</li>
+              <li>Defined KPI baseline; ran pilot + parallel run to de-risk cutover.</li>
+              <li>Aligned senior leaders on roadmap; supported DS recruiting analytics.</li>
+            </ul>
+          </div>
+        </div>
+      </li>
+
+      <!-- Work -->
+      <li>
+        <div class="tl-card work" role="button" tabindex="0" aria-expanded="false">
+          <time>Jan–Apr 2025</time>
+          <h3>DLZ — Internal Consultant</h3>
+          <div class="details">
+            <ul>
+              <li>Built NPV/IRR scenarios; pressure-tested assumptions with Finance/Ops.</li>
+              <li>Summarized risks/mitigations; set decision criteria and checkpoints.</li>
+            </ul>
+          </div>
+        </div>
+      </li>
+
+      <!-- Work -->
+      <li>
+        <div class="tl-card work" role="button" tabindex="0" aria-expanded="false">
+          <time>Jun 2023–Jul 2024</time>
+          <h3>Rutgers University — Data Engineer</h3>
+          <div class="details">
+            <ul>
+              <li>Led 12-person migration; engineered AWS ingestion & processing.</li>
+              <li>Improved processing efficiency ~95%; mentored Python analytics.</li>
+            </ul>
+          </div>
+        </div>
+      </li>
+
+      <!-- Work -->
+      <li>
+        <div class="tl-card work" role="button" tabindex="0" aria-expanded="false">
+          <time>May–Aug 2022</time>
+          <h3>Michael Baker International — Environmental Eng. Consultant</h3>
+          <div class="details">
+            <ul>
+              <li>Automated data collection/cleansing for large spatial datasets.</li>
+              <li>Established QA steps achieving &gt;95% data integrity.</li>
+            </ul>
+          </div>
+        </div>
+      </li>
+
+      <!-- Work -->
+      <li>
+        <div class="tl-card work" role="button" tabindex="0" aria-expanded="false">
+          <time>Jan 2021–Jun 2023</time>
+          <h3>University of Georgia — Data Scientist</h3>
+          <div class="details">
+            <ul>
+              <li>Built ML forecasting (R² ≈ 0.97) and physics-based risk models.</li>
+              <li>Python/SQL pipelines increased usage ~5× in a $10M consortium.</li>
+            </ul>
+          </div>
+        </div>
+      </li>
+
+      <!-- Education -->
+      <li>
+        <div class="tl-card edu" role="button" tabindex="0" aria-expanded="false">
+          <time>2024–2026</time>
+          <h3>Ohio State — STEM MBA</h3>
+          <p>Fisher College of Business, Columbus, OH.</p>
+          <div class="details">
+            <ul>
+              <li>Data & Strategy focus; FIGSA leadership; ACG Cup (M&A) bracket 2nd.</li>
+              <li>Projects in KPI design, dashboarding, and DCF modeling.</li>
+            </ul>
+          </div>
+        </div>
+      </li>
+
+      <!-- Education -->
+      <li>
+        <div class="tl-card edu" role="button" tabindex="0" aria-expanded="false">
+          <time></time>
+          <h3>University of Georgia — PhD in Engineering</h3>
+          <p>Athens, GA.</p>
+          <div class="details">
+            <ul>
+              <li>Large-scale climate/forecasting research; cloud compute & X-array.</li>
+              <li>Publications and applied modeling to inform decision-making.</li>
+            </ul>
+          </div>
+        </div>
+      </li>
+
+      <!-- Work (leadership/activities) -->
+      <li>
+        <div class="tl-card work" role="button" tabindex="0" aria-expanded="false">
+          <time>Mar 2021–May 2023</time>
+          <h3>PATH Volleyball — Head Coach</h3>
+          <p>Player development; program improvement ~40% over two seasons.</p>
+          <div class="details">
+            <ul>
+              <li>Individualized training plans; culture & teamwork emphasis.</li>
+              <li>Game strategy, analytics, and feedback loops for athletes.</li>
+            </ul>
+          </div>
+        </div>
+      </li>
+    </ol>
+  </div>
+</section>
+
+
+    <!-- Panel 3: More Projects -->
+    <section id="s3" class="panel" aria-label="More Projects">
+      <div class="card">
+        <h2>More Projects</h2>
+        <p>
+          Swap this for thumbnails or a second hero. Add more sections by duplicating a
+          <code>section.panel</code> and a dot below.
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- Left section dots (now interactive) -->
+  <nav class="left-dots" aria-label="Section navigation">
+    <button type="button" data-target="#s1" aria-label="Go to section 1" aria-current="true"></button>
+    <button type="button" data-target="#s2" aria-label="Go to section 2"></button>
+    <button type="button" data-target="#s3" aria-label="Go to section 3"></button>
+  </nav>
+
+  <!-- Footer crumbs -->
+  <footer>© <span id="year"></span></footer>
+  <div class="sound">SOUND OFF</div>
+
+  <!-- Custom cursor elements -->
+  <div class="cursor-dot" id="cDot" aria-hidden="true"></div>
+
+  <script>
+    /* Year + clock */
+    document.getElementById('year').textContent = new Date().getFullYear();
+    function fmt(t){let h=t.getHours(),m=t.getMinutes();const am=h>=12?'PM':'AM';h=h%12||12;return `${h}:${String(m).padStart(2,'0')} ${am}`;}
+    const clockEl=document.getElementById('clock'); function tick(){clockEl.textContent=fmt(new Date());}
+    tick(); setInterval(tick,1000);
+
+    /* --------- Smooth section navigation (mouse, trackpad, keys) --------- */
+    const scroller = document.getElementById('scroller');
+    const sections = Array.from(document.querySelectorAll('section.panel'));
+    const dots = Array.from(document.querySelectorAll('.left-dots button'));
+
+    // Click dots to scroll
+    dots.forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const sel = btn.getAttribute('data-target');
+        const el = document.querySelector(sel);
+        if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); }
+      });
+    });
+
+    // Update active dot on scroll using IntersectionObserver
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          const id = '#'+entry.target.id;
+          dots.forEach(d => d.setAttribute('aria-current', String(d.getAttribute('data-target')===id)));
+        }
+      });
+    }, { root: scroller, threshold: 0.6 });
+    sections.forEach(s => io.observe(s));
+
+    // Keyboard helpers (PgDn/PgUp/Arrow keys/Space)
+    function goto(idx){
+      const clamped = Math.max(0, Math.min(idx, sections.length-1));
+      sections[clamped].scrollIntoView({behavior:'smooth', block:'start'});
+    }
+    document.addEventListener('keydown', e=>{
+      if (['ArrowDown','PageDown',' '].includes(e.key)){ e.preventDefault();
+        const i = sections.findIndex(s => s.getBoundingClientRect().top >= 0 && s.getBoundingClientRect().top < window.innerHeight/2);
+        goto((i===-1?0:i)+1);
+      } else if (['ArrowUp','PageUp'].includes(e.key)){ e.preventDefault();
+        const i = sections.findIndex(s => s.getBoundingClientRect().top >= 0 && s.getBoundingClientRect().top < window.innerHeight/2);
+        goto((i===-1?0:i)-1);
+      }
+    });
+
+    /* --------- Custom cursor (desktop) --------- */
+    const supportsFine = matchMedia('(pointer:fine)').matches;
+    if (supportsFine){
+      const dot = document.getElementById('cDot');
+      /*const ring = document.getElementById('cRing');*/
+      let x = window.innerWidth/2, y = window.innerHeight/2, rx=x, ry=y;
+
+      const lerp=(a,b,n)=>(1-n)*a+n*b;
+      function onMove(e){
+        x = e.clientX; y = e.clientY;
+        dot.style.transform = `translate(${x-3}px, ${y-3}px)`;
+      }
+      function loop(){
+        rx = lerp(rx, x, 0.18); ry = lerp(ry, y, 0.18);
+        ring.style.transform = `translate(${rx - (parseInt(getComputedStyle(ring).width)/2)}px, ${ry - (parseInt(getComputedStyle(ring).height)/2)}px)`;
+        requestAnimationFrame(loop);
+      }
+      window.addEventListener('mousemove', onMove, {passive:true});
+      loop();
+
+      // Enlarge ring on interactive elements
+      const hoverables = 'a, button, [role="button"], .hoverable, input, textarea, select';
+      document.addEventListener('mouseover', e=>{
+        if (e.target.closest(hoverables)) ring.classList.add('-hover');
+      });
+      document.addEventListener('mouseout', e=>{
+        if (e.target.closest(hoverables)) ring.classList.remove('-hover');
+      });
+
+      document.addEventListener('mouseleave', ()=> ring.style.opacity=.35);
+      document.addEventListener('mouseenter', ()=> ring.style.opacity=.75);
+    }
+  </script>
+  <script>
+document.addEventListener("DOMContentLoaded", () => {
+  // Columbus, Ohio
+  const CITY_NAME = "COLUMBUS";
+  const TZ = "America/New_York";
+  const LAT = 39.9612, LON = -82.9988;
+
+  const cityEl = document.getElementById("city");
+  const tempEl = document.getElementById("temp");
+  const clockEl = document.getElementById("clock");
+
+  if (cityEl) cityEl.textContent = CITY_NAME;
+
+  // Live clock in Columbus (handles DST automatically)
+  function updateClock() {
+    const now = new Date();
+    clockEl.textContent = new Intl.DateTimeFormat("en-US", {
+      hour: "2-digit", minute: "2-digit", hour12: true, timeZone: TZ
+    }).format(now);
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // Robust weather fetch with fallback
+  async function updateWeather() {
+    try {
+      // Try classic "current_weather"
+      const url1 = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current_weather=true&temperature_unit=fahrenheit&timezone=${encodeURIComponent(TZ)}`;
+      let res = await fetch(url1, { cache: "no-store", mode: "cors" });
+      let data = await res.json();
+      let t = Math.round(data?.current_weather?.temperature ?? NaN);
+      if (Number.isFinite(t)) { tempEl.textContent = `${t}°F`; return; }
+
+      // Fallback: newer "current=temperature_2m"
+      const url2 = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m&temperature_unit=fahrenheit&timezone=${encodeURIComponent(TZ)}`;
+      res = await fetch(url2, { cache: "no-store", mode: "cors" });
+      data = await res.json();
+      t = Math.round(data?.current?.temperature_2m ?? NaN);
+      if (Number.isFinite(t)) { tempEl.textContent = `${t}°F`; return; }
+
+      throw new Error("Temperature not found in API response");
+    } catch (err) {
+      console.error("Weather fetch failed:", err);
+      if (tempEl) tempEl.textContent = "—°F";
+    }
+  }
+
+  updateWeather();
+  // refresh every 10 minutes
+  setInterval(updateWeather, 10 * 60 * 1000);
+});
+
+// Reveal timeline items when the Info panel comes into view
+(() => {
+  const scroller = document.getElementById('scroller');           // your snap container
+  const items = document.querySelectorAll('#timeline li');
+
+  if (!items.length) return;
+
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in-view'); });
+  }, { root: scroller || null, threshold: 0.35 });
+
+  items.forEach(li => io.observe(li));
+})();
+// Toggle expand on click/tap and keyboard
+  (function(){
+    document.querySelectorAll('#s2 .tl-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        // Avoid following any nested links accidentally
+        e.preventDefault?.();
+        card.classList.toggle('is-expanded');
+        card.setAttribute('aria-expanded', card.classList.contains('is-expanded'));
+      });
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          card.classList.toggle('is-expanded');
+          card.setAttribute('aria-expanded', card.classList.contains('is-expanded'));
+        }
+      });
+    });
+  })();
+</script>
+
+
+  </body>
+</html>
