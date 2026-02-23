@@ -1,631 +1,751 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+	<head>
 		<!-- Google tag (gtag.js) -->
 		<script async src="https://www.googletagmanager.com/gtag/js?id=G-FF7911YWVR"></script>
 		<script>
-					window.dataLayer = window.dataLayer || [];
-					function gtag(){dataLayer.push(arguments);}
-					gtag('js', new Date());
-					gtag('config', 'G-FF7911YWVR');
+			  window.dataLayer = window.dataLayer || [];
+			  function gtag(){dataLayer.push(arguments);}
+			  gtag('js', new Date());
+			  gtag('config', 'G-FF7911YWVR');
 		</script>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MBA</title>
-  <meta name="description" content="Minimal portfolio with custom cursor, shaded tabs, and full-screen snap scrolling." />
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Matheus Fagundes</title>
+	<meta name="description" content="Portfolio of Matheus Fagundes — STEM MBA, Data Strategist & Engineer." />
+	<style>
+		/* ============================================================
+		   DESIGN TOKENS
+		   ============================================================ */
+		:root{
+			  --bg:#ffffff;
+			  --fg:#111;
+			  --muted:#e9e9e9;
+			  --soft:#f7f7f7;
+			  --link:#111;
+			  --dim:.28;
+			  --ring:38px;
+			  --dot:6px;
+			  --accent:#111;
+			  --card-radius:14px;
+		}
 
-  <style>
-    :root{
-      --bg:#ffffff; --fg:#111; --muted:#e9e9e9; --soft:#f7f7f7; --link:#111;
-      --dim:.28;                 /* shaded look for idle tabs */
-      --ring:38px;               /* cursor ring size */
-      --dot:6px;                 /* cursor dot size */
-      --heroW: min(82vw, 1100px);
-      --heroH: calc(var(--heroW) * 0.52);
-    }
+		/* ============================================================
+		   RESET & BASE
+		   ============================================================ */
+		*{box-sizing:border-box;margin:0;padding:0}
+		html,body{height:100%}
+		html{scroll-behavior:smooth}
+		body{
+			  background:var(--bg);
+			  color:var(--fg);
+			  font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+			  -webkit-font-smoothing:antialiased;
+			  text-rendering:optimizeLegibility;
+			  overflow:hidden; /* outer body doesn't scroll; scroller does */
+		}
+		a{color:var(--link);text-decoration:none}
+		a:focus-visible,button:focus-visible{outline:2px dashed #999;outline-offset:4px}
+		.container{max-width:1320px;margin:0 auto;padding:0 24px}
+		.row{display:flex;align-items:center;justify-content:space-between;gap:16px}
 
-    *{ box-sizing:border-box }
-    html,body{ height:100% }
-    html{ scroll-behavior:smooth } /* smooth programmatic scroll */
-    body{
-      margin:0; background:var(--bg); color:var(--fg);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
-    }
-    a{ color:var(--link); text-decoration:none }
-    a:focus-visible, button:focus-visible{ outline:2px dashed #999; outline-offset:4px }
+		/* ============================================================
+		   HEADER / TABS
+		   ============================================================ */
+		header{
+			  position:fixed;
+			  top:0;left:0;right:0;
+			  z-index:20;
+			  background:rgba(255,255,255,.96);
+			  border-bottom:1px solid var(--muted);
+			  backdrop-filter:saturate(180%) blur(8px);
+			  -webkit-backdrop-filter:saturate(180%) blur(8px);
+		}
+		.tabs{display:flex;gap:28px;align-items:center;padding:14px 0}
+		.tabs a{
+			  font-size:13px;font-weight:700;letter-spacing:.04em;
+			  opacity:var(--dim);filter:grayscale(1);
+			  transition:opacity .18s ease,filter .18s ease;
+		}
+		.tabs a:hover,.tabs a:focus,.tabs a.active{opacity:1;filter:none}
+		.meta{display:flex;gap:18px;align-items:center;font-size:11px;opacity:.7}
 
-    .container{ max-width:1320px; margin:0 auto; padding:0 24px }
-    .row{ display:flex; align-items:center; justify-content:space-between; gap:16px }
+		/* ============================================================
+		   SCROLL CONTAINER & PANELS
+		   ============================================================ */
+		.scroller{
+			  position:fixed;
+			  top:0;left:0;right:0;bottom:0;
+			  overflow-y:auto;
+			  scroll-snap-type:y mandatory;
+			  /* push content below fixed header */
+			  padding-top:0;
+		}
+		section.panel{
+			  min-height:100vh;
+			  scroll-snap-align:start;
+			  display:grid;
+			  place-items:center;
+			  padding:64px 0 44px; /* 64px top = header height buffer */
+			  position:relative;
+		}
 
-    /* ---------- Header / Tabs ---------- */
-    header{
-      position:sticky; top:0; z-index:20;
-      background:rgba(255,255,255,.96);
-      border-bottom:1px solid var(--muted);
-      backdrop-filter:saturate(180%) blur(8px);
-    }
-    .tabs{ display:flex; gap:28px; align-items:center; padding:14px 0 }
-    .tabs a{
-      font-size:13px; font-weight:700; letter-spacing:.04em;
-      opacity:var(--dim); filter:grayscale(1);
-      transition:opacity .18s ease, filter .18s ease;
-    }
-    .tabs a:hover, .tabs a:focus{ opacity:1; filter:none }
-    .meta{ display:flex; gap:18px; align-items:center; font-size:11px; opacity:.7 }
+		/* ============================================================
+		   PANEL 1 — HERO
+		   ============================================================ */
+		.stage{background:var(--bg)}
+		.stage .frame{
+			  width:min(68vw,480px);
+			  aspect-ratio:3/4;
+			  background:#000;
+			  display:grid;
+			  place-items:center;
+			  overflow:hidden;
+			  box-shadow:0 10px 40px rgba(0,0,0,.12);
+			  position:relative;
+			  border-radius:4px;
+		}
+		.stage .frame img{
+			  max-width:100%;max-height:100%;
+			  width:auto;height:auto;
+			  object-fit:contain;
+			  display:block;
+		}
+		.overlay-title{
+			  position:absolute;top:0;left:0;right:0;
+			  display:flex;justify-content:center;align-items:flex-start;
+			  padding:14px 16px;
+			  pointer-events:none;
+			  background:linear-gradient(to bottom,rgba(0,0,0,.55),rgba(0,0,0,0));
+		}
+		.overlay-title h1{
+			  margin:0;color:#fff;font-weight:700;
+			  letter-spacing:.35em;text-transform:uppercase;
+			  font-size:clamp(14px,2.2vw,22px);text-align:center;
+		}
 
-    /* ---------- Scroll container & sections ---------- */
-    .scroller{
-      height:100vh; overflow-y:auto; scroll-snap-type:y mandatory; /* one panel per scroll */
-    }
-    section.panel{
-      min-height:100vh; scroll-snap-align:start;
-      display:grid; place-items:center; padding:48px 0 44px; position:relative;
-    }
+		/* ============================================================
+		   PANEL 2 — INFO / TIMELINE
+		   ============================================================ */
+		.panel.alt{background:var(--soft)}
 
-    /* ---------- Hero ---------- */
-/* Portrait-friendly hero frame for a headshot */
-.stage .frame{
-  /* a narrower, taller box works best for a headshot */
-  width: min(70vw, 520px);
-  aspect-ratio: 3 / 4;               /* portrait ratio; adjust to 4/5 or 2/3 if you like */
-  background:#000;
-  display:grid; place-items:center;
-  overflow:hidden;
-  box-shadow:0 10px 10px rgba(0,0,0,.06);
-  position:relative;
-}
+		.timeline{
+			  --line:#e6e7eb;
+			  --dot-c:#111;
+			  max-width:1100px;width:100%;
+			  margin:0 auto;padding:24px 10px;
+			  position:relative;
+		}
+		.timeline::before{
+			  content:"";position:absolute;top:0;bottom:0;
+			  left:50%;width:3px;background:var(--line);
+			  transform:translateX(-50%);
+		}
+		.timeline ol{list-style:none}
 
-/* Make ANY image fit inside without distortion (no cropping) */
-.stage .frame img{
-  max-width:100%;
-  max-height:100%;
-  width:auto;
-  height:auto;
-  object-fit:contain;                 /* ensures the full headshot is visible */
-  display:block;
-}
+		.timeline li{
+			  position:relative;margin:36px 0;
+			  opacity:0;transform:translateY(18px);
+			  transition:transform .5s ease,opacity .5s ease;
+		}
+		.timeline li.in-view{opacity:1;transform:none}
+		.timeline li::before{content:none!important}
 
-/* Title overlay (unchanged) */
-/* Make sure the frame is the positioning context */
-.stage .frame { position: relative; }
+		.tl-card{
+			  position:relative;
+			  background:#fff;border:1px solid var(--line);border-radius:var(--card-radius);
+			  padding:16px 18px;
+			  box-shadow:0 8px 24px rgba(0,0,0,.05);
+			  width:calc(50% - 48px);
+			  cursor:pointer;
+			  transition:transform .18s ease,box-shadow .18s ease;
+			  outline:none;z-index:1;
+		}
+		.timeline li:nth-child(odd)  .tl-card{margin-left:calc(50% + 48px)}
+		.timeline li:nth-child(even) .tl-card{margin-right:calc(50% + 48px)}
+		.tl-card:hover,.tl-card:focus-within,.tl-card.is-expanded{
+			  transform:scale(1.03);box-shadow:0 14px 36px rgba(0,0,0,.12);z-index:3;
+		}
+		.tl-card:focus-visible{outline:2px dashed #9aa1a8;outline-offset:4px}
+		.tl-card time{display:block;font-size:12px;letter-spacing:.08em;color:#666;margin-bottom:6px}
+		.tl-card h3{margin:.1rem 0 .35rem;font-size:18px;letter-spacing:.02em}
+		.tl-card p{color:#444}
+		.tl-card .details{
+			  margin-top:10px;max-height:0;opacity:0;overflow:hidden;
+			  transition:max-height .3s ease,opacity .2s ease;
+		}
+		.tl-card:hover .details,
+		.tl-card:focus-within .details,
+		.tl-card.is-expanded .details{max-height:480px;opacity:1}
+		.tl-card .details ul{padding:0 0 0 18px}
+		.tl-card .details li{margin:6px 0;line-height:1.45}
 
-/* Text bar pinned to the top of the image */
-.overlay-title{
-  position:absolute;
-  top:0; left:0; right:0;
-  display:flex;
-  justify-content:center;      /* center across the image */
-  align-items:flex-start;
-  padding:12px 16px;
-  pointer-events:none;         /* doesn’t block hover/clicks on the image */
-  /* Optional readability gradient over dark photos: */
-  background: linear-gradient(to bottom, rgba(0,0,0,.45), rgba(0,0,0,0));
-}
+		.tl-card.work{background:#f5f6f7;border-color:#e3e7ec}
+		.tl-card.edu {background:#ffe9ec;border-color:#ffcfd6}
+		.tl-card.work::after,.tl-card.edu::after{
+			  content:"";position:absolute;left:-6px;top:14px;bottom:14px;
+			  width:4px;border-radius:2px;
+		}
+		.tl-card.work::after{background:#cfd6de}
+		.tl-card.edu::after {background:#ffb5bf}
 
-.overlay-title h1{
-  margin:0;
-  color:#fff;                   /* white over the gradient */
-  font-weight:700;
-  letter-spacing:.35em;
-  text-transform:uppercase;
-  font-size:clamp(16px,2.2vw,22px);
-  text-align:center;
-}
+		/* Mobile timeline */
+		@media(max-width:760px){
+			  .timeline::before{left:20px}
+			  .tl-card{width:auto;margin-left:44px;margin-right:0}
+			  .timeline li:nth-child(odd)  .tl-card,
+			  .timeline li:nth-child(even) .tl-card{margin-left:44px;margin-right:0}
+		}
 
-/* If you want it top-left instead of centered, add this utility: */
-.overlay-title.-left { justify-content:flex-start; }
+		/* ============================================================
+		   PANEL 3 — PROJECTS
+		   ============================================================ */
+		#s3{background:var(--bg)}
 
+		.projects-wrap{
+			  max-width:1100px;width:100%;margin:0 auto;
+			  padding:0 20px;
+		}
+		.projects-wrap h2{
+			  font-size:clamp(22px,3vw,32px);
+			  letter-spacing:.05em;margin-bottom:32px;
+			  text-align:center;
+		}
 
+		/* Project card */
+		.proj-card{
+			  border:1px solid var(--muted);
+			  background:#fff;border-radius:var(--card-radius);
+			  overflow:hidden;
+			  box-shadow:0 8px 28px rgba(0,0,0,.06);
+			  transition:box-shadow .2s ease,transform .2s ease;
+		}
+		.proj-card:hover{box-shadow:0 18px 48px rgba(0,0,0,.12);transform:translateY(-3px)}
 
-    /* ---------- Sample second/third panels ---------- */
-    .panel.alt{ background:var(--soft) }
-    .card{
-      border:1px solid var(--muted); background:#fff; border-radius:16px;
-      padding:24px 26px; box-shadow:0 8px 28px rgba(0,0,0,.05); max-width:900px;
-    }
-    .card h2{ margin:.2rem 0 0.6rem; letter-spacing:.05em }
-    .card p{ margin:0; color:#444; max-width:70ch }
+		/* Screenshot */
+		.proj-thumb{
+			  width:100%;aspect-ratio:16/9;
+			  overflow:hidden;background:#1e1e2e;
+			  display:block;position:relative;
+		}
+		.proj-thumb img{
+			  width:100%;height:100%;
+			  object-fit:cover;object-position:top;
+			  display:block;
+			  transition:transform .4s ease;
+		}
+		.proj-card:hover .proj-thumb img{transform:scale(1.03)}
+		.proj-thumb-link{display:block;text-decoration:none}
 
-    /* ---------- Left nav dots ---------- */
-    .left-dots{
-      position:fixed; left:18px; top:50%; transform:translateY(-50%);
-      display:flex; flex-direction:column; gap:10px; z-index:30;
-    }
-    .left-dots button{
-      width:10px; height:10px; border-radius:50%; border:none; padding:0;
-      background:#cfcfcf; opacity:.9; cursor:pointer;
-      transition:transform .15s ease, background .15s ease;
-    }
-    .left-dots button[aria-current="true"]{ background:#000; transform:scale(1.2) }
-    .left-dots button:hover{ background:#111 }
+		/* Body */
+		.proj-body{padding:24px 28px 28px}
+		.proj-body h3{
+			  font-size:20px;letter-spacing:.03em;margin-bottom:6px;
+		}
+		.proj-body .proj-desc{
+			  color:#555;line-height:1.65;margin-bottom:18px;
+			  font-size:15px;
+		}
+		.proj-tag{
+			  display:inline-block;
+			  font-size:11px;font-weight:700;letter-spacing:.06em;
+			  text-transform:uppercase;
+			  background:var(--soft);border:1px solid var(--muted);
+			  border-radius:4px;padding:3px 8px;margin:0 4px 6px 0;
+			  color:#555;
+		}
 
-    /* ---------- Footer crumbs ---------- */
-    footer{ position:fixed; left:18px; bottom:16px; font-size:11px; opacity:.7; z-index:10 }
-    .sound{ position:fixed; right:28px; bottom:16px; font-size:11px; opacity:.7; z-index:10 }
+		/* Workflow strip */
+		.workflow{
+			  margin-top:20px;padding-top:18px;
+			  border-top:1px solid var(--muted);
+		}
+		.workflow p.wf-label{
+			  font-size:11px;font-weight:700;letter-spacing:.1em;
+			  text-transform:uppercase;color:#999;margin-bottom:12px;
+		}
+		.wf-steps{
+			  display:flex;flex-wrap:wrap;align-items:center;gap:6px;
+		}
+		.wf-step{
+			  background:#f0f0f0;border-radius:6px;
+			  padding:6px 12px;font-size:13px;font-weight:600;
+			  color:#333;white-space:nowrap;
+		}
+		.wf-arrow{color:#bbb;font-size:16px;font-weight:300}
 
-    /* ---------- Custom cursor ---------- */
-    @media (pointer:fine){
-      body{ cursor:none }
-      .cursor-dot, .cursor-ring{
-        position:fixed; top:0; left:0; pointer-events:none; z-index:9999;
-        transform:translate(-50%, -50%); mix-blend-mode:difference;
-      }
-      .cursor-dot{ width:var(--dot); height:var(--dot); border-radius:50%; background:#fff }
-      .cursor-ring{
-        width:var(--ring); height:var(--ring); border-radius:50%;
-        border:1.8px solid #fff; opacity:.75;
-        transition:transform .12s ease, opacity .2s ease;
-      }
-      .cursor-ring.-hover{ transform:translate(-50%,-50%) scale(1.35) }
-    }
+		/* Thought bubble */
+		.proj-thought{
+			  margin-top:18px;padding:14px 18px;
+			  background:var(--soft);border-left:3px solid #ccc;
+			  border-radius:0 8px 8px 0;
+			  font-size:13px;color:#555;line-height:1.6;
+			  font-style:italic;
+		}
+		.proj-thought strong{font-style:normal;color:#333}
 
-    /* ---------- Mobile ---------- */
-    @media (max-width: 760px){
-      .tabs{ gap:18px } .meta{ display:none }
-      .left-dots{ display:none } .sound{ right:16px }
-      .stage .frame{ width:min(92vw,720px); height:calc(min(92vw,720px)*.56) }
-    }
-    /* ===== Timeline (Info panel) ===== */
-.timeline{
-  --line:#e6e7eb; --dot:#111; --card-bg:#fff;
-  max-width: 1100px; width:100%; margin: 0 auto; padding: 24px 10px;
-  position: relative;
-}
-.timeline::before{
-  content:""; position:absolute; top:0; bottom:0; left:50%;
-  width:3px; background:var(--line); transform:translateX(-50%);
-}
-.timeline ol{ list-style:none; margin:0; padding:0 }
-.timeline li{
-  position:relative; margin: 36px 0; opacity:0; transform: translateY(18px);
-  transition: transform .5s ease, opacity .5s ease;
-}
-.timeline li.in-view{ opacity:1; transform:none }
+		/* CTA link */
+		.proj-cta{
+			  display:inline-flex;align-items:center;gap:6px;
+			  margin-top:18px;
+			  font-size:13px;font-weight:700;letter-spacing:.04em;
+			  text-transform:uppercase;
+			  border-bottom:2px solid #111;padding-bottom:2px;
+			  transition:opacity .15s;
+		}
+		.proj-cta:hover{opacity:.6}
 
-/* Dot on the center line 
-.timeline li::before{
-  content:""; position:absolute; top:14px; left:50%; transform:translate(-50%, -50%);
-  width:13px; height:13px; border-radius:50%; background:var(--dot);
-  box-shadow: 0 0 0 4px #fff, 0 0 0 8px var(--line);
-}*/
-/* kill the center dots */
-.timeline li::before { content: none !important; }
+		/* ============================================================
+		   LEFT NAV DOTS
+		   ============================================================ */
+		.left-dots{
+			  position:fixed;left:18px;top:50%;
+			  transform:translateY(-50%);
+			  display:flex;flex-direction:column;gap:10px;
+			  z-index:30;
+		}
+		.left-dots button{
+			  width:10px;height:10px;border-radius:50%;border:none;padding:0;
+			  background:#cfcfcf;opacity:.9;cursor:pointer;
+			  transition:transform .15s ease,background .15s ease;
+		}
+		.left-dots button[aria-current="true"]{background:#000;transform:scale(1.2)}
+		.left-dots button:hover{background:#111}
 
-/* Card (alternating sides) */
-.tl-card{
-  position:relative; background:var(--card-bg); border:1px solid var(--line);
-  border-radius:14px; padding:16px 18px; box-shadow:0 8px 24px rgba(0,0,0,.05);
-  width: calc(50% - 48px);
-}
-.timeline li:nth-child(odd) .tl-card{ margin-left: calc(50% + 48px) }
-.timeline li:nth-child(even) .tl-card{ margin-right: calc(50% + 48px) }
+		/* ============================================================
+		   FOOTER / SOUND
+		   ============================================================ */
+		footer{position:fixed;left:18px;bottom:16px;font-size:11px;opacity:.7;z-index:10}
+		.sound{position:fixed;right:28px;bottom:16px;font-size:11px;opacity:.7;z-index:10}
 
-.tl-card time{ display:block; font-size:12px; letter-spacing:.08em; color:#666; margin-bottom:6px }
-.tl-card h3{ margin:.1rem 0 .35rem; font-size:18px; letter-spacing:.02em }
-.tl-card p{ margin:0; color:#444 }
+		/* ============================================================
+		   CUSTOM CURSOR (desktop only)
+		   ============================================================ */
+		@media(pointer:fine){
+			  body{cursor:none}
+			  .cursor-dot,.cursor-ring{
+				      position:fixed;top:0;left:0;
+				      pointer-events:none;z-index:9999;
+				      transform:translate(-50%,-50%);
+				      mix-blend-mode:difference;
+			  }
+			  .cursor-dot{
+				      width:var(--dot);height:var(--dot);
+				      border-radius:50%;background:#fff;
+			  }
+			  .cursor-ring{
+				      width:var(--ring);height:var(--ring);
+				      border-radius:50%;border:1.8px solid #fff;
+				      opacity:.75;
+				      transition:transform .12s ease,opacity .2s ease;
+			  }
+			  .cursor-ring.-hover{transform:translate(-50%,-50%) scale(1.35)}
+		}
 
-/* Mobile: stack to one side */
-@media (max-width: 760px){
-  .timeline::before{ left:24px; }
-  .timeline li::before{ left:24px; transform:translate(-50%, -50%); }
-  .tl-card{ width:auto; margin-left:48px; margin-right:0 }
-  .timeline li:nth-child(odd) .tl-card,
-  .timeline li:nth-child(even) .tl-card{ margin-left:48px }
-}
-/* Timeline color scheme by type */
-.tl-card.work{
-  background:#f5f6f7;          /* light gray */
-  border-color:#e3e7ec;
-}
-.tl-card.edu{
-  background:#ffe9ec;          /* light red */
-  border-color:#ffcfd6;
-}
+		/* ============================================================
+		   MOBILE OVERRIDES  (≤ 760 px)
+		   ============================================================ */
+		@media(max-width:760px){
+			  body{overflow:hidden}
+			  .tabs{gap:14px}
+			  .tabs a{font-size:11px;letter-spacing:.03em}
+			  .meta{display:none}
+			  .left-dots{display:none}
+			  .sound{right:16px;font-size:10px}
+			  footer{font-size:10px}
 
-/* optional: a subtle left accent bar */
-.tl-card.work::after,
-.tl-card.edu::after{
-  content:"";
-  position:absolute; left:-6px; top:14px; bottom:14px; width:4px; border-radius:2px;
-}
-.tl-card.work::after{ background:#cfd6de; }
-.tl-card.edu::after{  background:#ffb5bf; }
+			  /* Hero: full-width portrait on mobile */
+			  .stage .frame{
+				      width:min(88vw,420px);
+				      aspect-ratio:3/4;
+			  }
+			  .overlay-title h1{font-size:clamp(12px,5vw,18px);letter-spacing:.2em}
 
-/* Enlarge the square card and reveal details */
-	.tl-card{
-  	position: relative;
-  	cursor: pointer;
-  	transition: transform .18s ease, box-shadow .18s ease;
-  	outline: none;             /* we’ll style focus below */
-  	z-index: 1;
+			  /* Projects */
+			  .projects-wrap{padding:0 14px}
+			  .proj-body{padding:18px 18px 22px}
+			  .wf-steps{gap:4px}
+			  .wf-step{font-size:12px;padding:5px 9px}
+		}
+
+		/* ============================================================
+		   VERY SMALL SCREENS (≤ 400 px)
+		   ============================================================ */
+		@media(max-width:400px){
+			  .tabs{gap:10px}
+			  .tabs a{font-size:10px}
+			  .stage .frame{width:92vw}
+		}
+		</style>
+	</head>
+	<body>
+
+		<!-- ===================== HEADER ===================== -->
+		<header>
+			  <div class="container row">
+				      <nav class="tabs" aria-label="Primary">
+						        <a href="#s1" data-section="s1">HOME</a>a>
+						        <a href="#s2" data-section="s2">INFO</a>a>
+						        <a href="#s3" data-section="s3">PROJECTS</a>a>
+					  </nav>nav>
+				      <div class="meta" aria-label="Location &amp; time">
+						        <span id="temp">--&deg;F</span>span>
+						        <span id="city">COLUMBUS</span>span>
+						        <span id="clock">--:-- --</span>span>
+					  </div>div>
+			  </div>div>
+		</header>
+
+		<!-- ===================== SCROLL CONTAINER ===================== -->
+		<div class="scroller" id="scroller">
+
+			  <!-- ── PANEL 1 : HERO ── -->
+			  <section id="s1" class="panel stage" aria-label="Hero">
+				      <figure class="frame">
+						        <img src="img/Headshot.png" alt="Matheus Fagundes headshot" />
+						        <div class="overlay-title"><h1>Matheus Fagundes</h1></div>div>
+					  </figure>figure>
+			  </section>section>
+		
+		  <!-- ── PANEL 2 : INFO / TIMELINE ── -->
+		  <section id="s2" class="panel alt" aria-label="Experience &amp; Education">
+		      <div class="timeline" id="timeline">
+			        <ol>
+						        <li>
+									          <div class="tl-card work" role="button" tabindex="0" aria-expanded="false">
+												              <time>Jun–Aug 2025</time>
+											              <h3>JPMorgan Chase — Strategy Consulting Intern</h3>
+											              <div class="details"><ul>
+															                <li>Built project charter &amp; governance cadence across Connected Commerce.</li>
+														                <li>Defined KPI baseline; ran pilot + parallel run to de-risk cutover.</li>
+								              <li>Aligned senior leaders on roadmap; supported DS recruiting analytics.</li>
+														  </ul></div>div>
+											  </div>div>
+								</li>
+					        <li>
+								          <div class="tl-card work" role="button" tabindex="0" aria-expanded="false">
+											              <time>Jan–Apr 2025</time>time>
+											              <h3>DLZ — Internal Consultant</h3>h3>
+											              <div class="details"><ul>
+															                <li>Built NPV/IRR scenarios; pressure-tested assumptions with Finance/Ops.</li>
+															                <li>Summarized risks/mitigations; set decision criteria and checkpoints.</li>
+														  </ul></div>div>
+										  </div>div>
+							</li>
+						        <li>
+									          <div class="tl-card work" role="button" tabindex="0" aria-expanded="false">
+												              <time>Jun 2023–Jul 2024</time>time>
+												              <h3>Rutgers University — Data Engineer</h3>h3>
+												              <div class="details"><ul>
+																                <li>Led 12-person migration; engineered AWS ingestion &amp; processing.</li>
+																                <li>Improved processing efficiency ~95%; mentored Python analytics.</li>
+															  </ul></div>div>
+											  </div>div>
+								</li>
+						        <li>
+									          <div class="tl-card work" role="button" tabindex="0" aria-expanded="false">
+												              <time>May–Aug 2022</time>time>
+												              <h3>Michael Baker International — Environmental Eng. Consultant</h3>h3>
+												              <div class="details"><ul>
+																                <li>Automated data collection/cleansing for large spatial datasets.</li>
+																                <li>Established QA steps achieving &gt;95% data integrity.</li>
+															  </ul></div>div>
+											  </div>div>
+								</li>
+						        <li>
+									          <div class="tl-card work" role="button" tabindex="0" aria-expanded="false">
+												              <time>Jan 2021–Jun 2023</time>time>
+												              <h3>University of Georgia — Data Scientist</h3>h3>
+												              <div class="details"><ul>
+																                <li>Built ML forecasting (R&sup2; &asymp; 0.97) and physics-based risk models.</li>
+																                <li>Python/SQL pipelines increased usage ~5&times; in a $10M consortium.</li>
+															  </ul></div>div>
+											  </div>div>
+								</li>
+						        <li>
+									          <div class="tl-card edu" role="button" tabindex="0" aria-expanded="false">
+												              <time>2024–2026</time>time>
+												              <h3>Ohio State — STEM MBA</h3>h3>
+												              <p>Fisher College of Business, Columbus, OH.</p>
+											              <div class="details"><ul>
+														                <li>Data &amp; Strategy focus; FIGSA leadership; ACG Cup (M&amp;A) bracket 2nd.</li>
+														                <li>Projects in KPI design, dashboarding, and DCF modeling.</li>
+														  </ul></div>div>
+											  </div>div>
+								</li>
+					        <li>
+					          <div class="tl-card edu" role="button" tabindex="0" aria-expanded="false">
+							              <time>2019–2021</time>time>
+							              <h3>University of Georgia — PhD in Engineering</h3>h3>
+							              <p>Athens, GA.</p>
+							              <div class="details"><ul>
+											                <li>Computational &amp; data-driven research in engineering systems.</li>
+										  </ul></div>div>
+							  </div>div>
+							</li>
+					        <li>
+								          <div class="tl-card work" role="button" tabindex="0" aria-expanded="false">
+											              <time>Mar 2021–May 2023</time>
+										              <h3>PATH Volleyball — Head Coach</h3>
+										              <p>Player development; program improvement ~40% over two seasons.</p>
+										              <div class="details"><ul>
+														                <li>Individualized training plans; culture &amp; teamwork emphasis.</li>
+													                <li>Game strategy, analytics, and feedback loops for athletes.</li>
+													  </ul></div>div>
+										  </div>div>
+							</li>
+					</ol>
+			  </div>div>
+		  </section>section>
+		
+		  <!-- ── PANEL 3 : PROJECTS ── -->
+		  <section id="s3" class="panel" aria-label="Projects">
+		      <div class="projects-wrap">
+			        <h2>PROJECTS</h2>
+			  
+			        <!-- ─ Project: Quant Trading Model Lab ─ -->
+			        <div class="proj-card">
+					
+					        <a class="proj-thumb-link" href="https://scl-alpha-eu8jkmvpxsokpnzpttfyt2.streamlit.app/model_lab" target="_blank" rel="noopener" aria-label="Open Model Lab app">
+							          <div class="proj-thumb">
+									              <img src="img/modellab_screenshot.png"
+													                   alt="Screenshot of the Model Lab Streamlit app showing model selection, portfolio backtest sliders, and trading cost inputs"
+													                   onerror="this.parentElement.style.background='#1e1e2e';this.style.display='none'" />
+									  </div>div>
+							</a>a>
+					
+					        <div class="proj-body">
+							          <h3>Quantitative Trading — Model Lab</h3>
+							          <p class="proj-desc">
+							            An interactive research platform for building, tuning, and backtesting
+							            machine-learning-driven trading strategies. Supports Ridge, Random Forest,
+							            and XGBoost; lets you dial long positions, train window, retrain frequency,
+							            trading cost, and slippage — then outputs a live sandbox P&amp;L.
+									  </p>
+							
+							          <span class="proj-tag">Python</span>span>
+							          <span class="proj-tag">Streamlit</span>span>
+							          <span class="proj-tag">Scikit-learn</span>span>
+							          <span class="proj-tag">XGBoost</span>span>
+							          <span class="proj-tag">Quant Finance</span>span>
+							
+							          <!-- Workflow -->
+							          <div class="workflow">
+									              <p class="wf-label">How it was built</p>
+									              <div class="wf-steps">
+												                <span class="wf-step">&#x1F4A1; Brainstorming</span>span>
+												                <span class="wf-arrow">&#8594;</span>span>
+												                <span class="wf-step">&#x1F916; LLM Suite for Code</span>span>
+												                <span class="wf-arrow">&#8594;</span>span>
+												                <span class="wf-step">&#x1F4CA; Streamlit UI</span>span>
+												                <span class="wf-arrow">&#8594;</span>span>
+												                <span class="wf-step">&#x2728; Codex Refinement</span>span>
+												                <span class="wf-arrow">&#8594;</span>span>
+												                <span class="wf-step">&#x1F4B9; Sandbox Quant Output</span>span>
+												  </div>div>
+									  </div>div>
+							
+							          <!-- Dev commentary -->
+							          <div class="proj-thought">
+									              <strong>My thinking:</strong> I started with a rough idea — what if I could
+									              rapidly compare ML models on financial data without re-writing boilerplate each time?
+									              I used an LLM suite to scaffold the core engine fast, then Streamlit to wire up
+									              a clean interactive front-end. Codex helped me sharpen the backtesting logic and
+									              handle edge cases. The result is a sandbox where I can stress-test strategies with
+									              realistic trading costs before committing any real capital.
+									  </div>div>
+							
+							          <a class="proj-cta" href="https://scl-alpha-eu8jkmvpxsokpnzpttfyt2.streamlit.app/model_lab" target="_blank" rel="noopener">
+									              Launch App &#x2197;
+									  </a>a>
+							</div>div>
+					
+					</div>div><!-- /proj-card -->
+			  
+			  </div>div><!-- /projects-wrap -->
+		  </section>section>
+		
+		</div>div><!-- /scroller -->
+	
+	<!-- Left section dots -->
+	<nav class="left-dots" aria-label="Section navigation">
+	  <button type="button" data-target="#s1" aria-label="Go to Home" aria-current="true"></button>button>
+	  <button type="button" data-target="#s2" aria-label="Go to Info"></button>button>
+	  <button type="button" data-target="#s3" aria-label="Go to Projects"></button>button>
+	</nav>nav>
+	
+	<!-- Footer -->
+	<footer>&copy; <span id="year"></span>span></footer>
+	<div class="sound">SOUND OFF</div>div>
+	
+	<!-- Custom cursor -->
+	<div class="cursor-dot"  id="cDot"  aria-hidden="true"></div>div>
+	<div class="cursor-ring" id="cRing" aria-hidden="true"></div>div>
+	
+	<!-- ===================== SCRIPTS ===================== -->
+	<script>
+	/* ── Year ── */
+	document.getElementById('year').textContent = new Date().getFullYear();
+	
+	/* ── Clock + Weather (Columbus) ── */
+	document.addEventListener('DOMContentLoaded', () => {
+		  const TZ  = 'America/New_York';
+		  const LAT = 39.9612, LON = -82.9988;
+		  const cityEl = document.getElementById('city');
+		  const tempEl = document.getElementById('temp');
+		  const clockEl = document.getElementById('clock');
+		
+							    if (cityEl) cityEl.textContent = 'COLUMBUS';
+		
+		  function updateClock(){
+			      if(!clockEl) return;
+					      clockEl.textContent = new Intl.DateTimeFormat('en-US',{
+							        hour:'2-digit', minute:'2-digit', hour12:true, timeZone:TZ
+						  }).format(new Date());
+		  }
+		  updateClock();
+		  setInterval(updateClock, 1000);
+		
+							    async function updateWeather(){
+									    try{
+											      const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current_weather=true&temperature_unit=fahrenheit&timezone=${encodeURIComponent(TZ)}`;
+											      const res  = await fetch(url,{cache:'no-store',mode:'cors'});
+											      const data = await res.json();
+											      let t = Math.round(data?.current_weather?.temperature ?? NaN);
+											      if(!Number.isFinite(t)){
+													          const url2 = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m&temperature_unit=fahrenheit&timezone=${encodeURIComponent(TZ)}`;
+													          const r2   = await fetch(url2,{cache:'no-store',mode:'cors'});
+													          const d2   = await r2.json();
+													          t = Math.round(d2?.current?.temperature_2m ?? NaN);
+												  }
+													        if(Number.isFinite(t)) tempEl.textContent = `${t}\u00b0F`;
+																      else throw new Error('temp NaN');
+										}catch(e){
+											      console.warn('Weather fetch failed:',e);
+											      if(tempEl) tempEl.textContent = '\u2014\u00b0F';
+										}
+								}
+		  updateWeather();
+		  setInterval(updateWeather, 10*60*1000);
+	});
+	
+	/* ── Section snap navigation ── */
+	const scroller = document.getElementById('scroller');
+	const sections = Array.from(document.querySelectorAll('section.panel'));
+	const dots      = Array.from(document.querySelectorAll('.left-dots button'));
+	const tabLinks  = Array.from(document.querySelectorAll('.tabs a[data-section]'));
+	
+	function setActive(id){
+		  dots.forEach(d => d.setAttribute('aria-current', String(d.getAttribute('data-target') === '#'+id)));
+		  tabLinks.forEach(a => a.classList.toggle('active', a.getAttribute('data-section') === id));
 	}
-	.tl-card:hover,
-	.tl-card:focus-within,
-	.tl-card.is-expanded{
-  	transform: scale(1.03);
-  	box-shadow: 0 14px 36px rgba(0,0,0,.12);
- 	 z-index: 3;
+	
+	// Dot click
+	dots.forEach(btn => btn.addEventListener('click', () => {
+		  const el = document.querySelector(btn.getAttribute('data-target'));
+		  if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+	}));
+	
+	// Tab click
+	tabLinks.forEach(a => a.addEventListener('click', e => {
+		  e.preventDefault();
+		  const id = a.getAttribute('data-section');
+		  const el = document.getElementById(id);
+		  if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+	}));
+	
+	// IntersectionObserver for active dot/tab
+	const io = new IntersectionObserver(entries => {
+		  entries.forEach(entry => { if(entry.isIntersecting) setActive(entry.target.id); });
+	}, { root: scroller, threshold: 0.5 });
+	sections.forEach(s => io.observe(s));
+	
+	// Keyboard: Arrow/PgDn/Space
+	function goto(idx){
+		  const i = Math.max(0, Math.min(idx, sections.length-1));
+		  sections[i].scrollIntoView({behavior:'smooth',block:'start'});
 	}
-
-	/* Accessible focus ring */
-	.tl-card:focus-visible{
-  	outline: 2px dashed #9aa1a8;
- 	 outline-offset: 4px;
+	document.addEventListener('keydown', e => {
+		  if(['ArrowDown','PageDown',' '].includes(e.key)){
+			      e.preventDefault();
+			      const cur = sections.findIndex(s => {
+					        const r = s.getBoundingClientRect();
+					        return r.top >= -10 && r.top < window.innerHeight * 0.5;
+				  });
+			      goto((cur === -1 ? 0 : cur) + 1);
+		  } else if(['ArrowUp','PageUp'].includes(e.key)){
+			      e.preventDefault();
+			      const cur = sections.findIndex(s => {
+					        const r = s.getBoundingClientRect();
+					        return r.top >= -10 && r.top < window.innerHeight * 0.5;
+				  });
+			      goto((cur === -1 ? 0 : cur) - 1);
+		  }
+	});
+	
+	/* ── Custom cursor (desktop fine pointer) ── */
+	if(matchMedia('(pointer:fine)').matches){
+		  const dot  = document.getElementById('cDot');
+		  const ring = document.getElementById('cRing');
+		  let x = window.innerWidth/2, y = window.innerHeight/2, rx=x, ry=y;
+		  const lerp = (a,b,n) => (1-n)*a+n*b;
+		
+		  window.addEventListener('mousemove', e => {
+			      x = e.clientX; y = e.clientY;
+			      dot.style.transform = `translate(${x-3}px, ${y-3}px)`;
+		  }, {passive:true});
+		
+		  (function loop(){
+			      rx = lerp(rx,x,.18); ry = lerp(ry,y,.18);
+			      const rw = ring.offsetWidth/2;
+			      ring.style.transform = `translate(${rx-rw}px, ${ry-rw}px)`;
+			      requestAnimationFrame(loop);
+		  })();
+		
+		  const hoverables = 'a,button,[role="button"],.hoverable,input,textarea,select';
+		  document.addEventListener('mouseover',  e => { if(e.target.closest(hoverables)) ring.classList.add('-hover'); });
+		  document.addEventListener('mouseout',   e => { if(e.target.closest(hoverables)) ring.classList.remove('-hover'); });
+		  document.addEventListener('mouseleave', () => ring.style.opacity = '.35');
+		  document.addEventListener('mouseenter', () => ring.style.opacity = '.75');
 	}
-
-	/* Hidden details by default */
-	.tl-card .details{
-  	margin-top: 10px;
-  	max-height: 0;
-  	opacity: 0;
-  	overflow: hidden;
-  	transition: max-height .3s ease, opacity .2s ease;
-	}
-
-	/* Show on hover / focus / expanded */
-	.tl-card:hover .details,
-	.tl-card:focus-within .details,
-	.tl-card.is-expanded .details{
-	  max-height: 480px;  /* adjust if you have longer lists */
-	  opacity: 1;
-	}
-
-	/* Keep your type backgrounds */
-	.tl-card.work{ background:#f5f6f7; border:1px solid #e3e7ec; border-radius:12px; }
-	.tl-card.edu { background:#ffe9ec; border:1px solid #ffcfd6; border-radius:12px; }
-
-	/* Optional: nicer bullet spacing */
-	.tl-card .details ul{ margin:0; padding:0 0 0 18px; }
-	.tl-card .details li{ margin:6px 0; line-height:1.45; }
-
-  </style>
-</head>
-<body>
-
-  <!-- Header (sticky inside scroller) -->
-<header>
-  <div class="container row">
-    <nav class="tabs" aria-label="Primary">
-      <a href="#s1">HOME</a>
-      <a href="#s2">INFO</a>
-      <a href="#s3">MORE PROJECTS</a>
-    </nav>
-    <div class="meta" aria-label="Location & time">
-      <span id="temp">--°F</span>
-      <span id="city">COLUMBUS</span>
-      <span id="clock">--:-- --</span>
-    </div>
-  </div>
-</header>
-
-
-  <!-- Scroll-snap container -->
-  <div class="scroller" id="scroller">
-
-    <!-- Panel 1: Hero -->
-    <section id="s1" class="panel stage" aria-label="Hero">
-      <figure class="frame">
-        <img src="img/Headshot.png" alt="d" />
-        <div class="overlay-title"><h1>Matheus Fagundes</h1></div>
-      </figure>
-    </section>
-
-    <!-- Panel 2: Info -->
-    <section id="s2" class="panel alt" aria-label="Info timeline">
-  <div class="timeline" id="timeline">
-    <ol>
-      <!-- Work -->
-      <li>
-        <div class="tl-card work" role="button" tabindex="0" aria-expanded="false">
-          <time>Jun–Aug 2025</time>
-          <h3>JPMorgan Chase — Strategy Consulting Intern</h3>
-          <div class="details">
-            <ul>
-              <li>Built project charter & governance cadence across Connected Commerce.</li>
-              <li>Defined KPI baseline; ran pilot + parallel run to de-risk cutover.</li>
-              <li>Aligned senior leaders on roadmap; supported DS recruiting analytics.</li>
-            </ul>
-          </div>
-        </div>
-      </li>
-
-      <!-- Work -->
-      <li>
-        <div class="tl-card work" role="button" tabindex="0" aria-expanded="false">
-          <time>Jan–Apr 2025</time>
-          <h3>DLZ — Internal Consultant</h3>
-          <div class="details">
-            <ul>
-              <li>Built NPV/IRR scenarios; pressure-tested assumptions with Finance/Ops.</li>
-              <li>Summarized risks/mitigations; set decision criteria and checkpoints.</li>
-            </ul>
-          </div>
-        </div>
-      </li>
-
-      <!-- Work -->
-      <li>
-        <div class="tl-card work" role="button" tabindex="0" aria-expanded="false">
-          <time>Jun 2023–Jul 2024</time>
-          <h3>Rutgers University — Data Engineer</h3>
-          <div class="details">
-            <ul>
-              <li>Led 12-person migration; engineered AWS ingestion & processing.</li>
-              <li>Improved processing efficiency ~95%; mentored Python analytics.</li>
-            </ul>
-          </div>
-        </div>
-      </li>
-
-      <!-- Work -->
-      <li>
-        <div class="tl-card work" role="button" tabindex="0" aria-expanded="false">
-          <time>May–Aug 2022</time>
-          <h3>Michael Baker International — Environmental Eng. Consultant</h3>
-          <div class="details">
-            <ul>
-              <li>Automated data collection/cleansing for large spatial datasets.</li>
-              <li>Established QA steps achieving &gt;95% data integrity.</li>
-            </ul>
-          </div>
-        </div>
-      </li>
-
-      <!-- Work -->
-      <li>
-        <div class="tl-card work" role="button" tabindex="0" aria-expanded="false">
-          <time>Jan 2021–Jun 2023</time>
-          <h3>University of Georgia — Data Scientist</h3>
-          <div class="details">
-            <ul>
-              <li>Built ML forecasting (R² ≈ 0.97) and physics-based risk models.</li>
-              <li>Python/SQL pipelines increased usage ~5× in a $10M consortium.</li>
-            </ul>
-          </div>
-        </div>
-      </li>
-
-      <!-- Education -->
-      <li>
-        <div class="tl-card edu" role="button" tabindex="0" aria-expanded="false">
-          <time>2024–2026</time>
-          <h3>Ohio State — STEM MBA</h3>
-          <p>Fisher College of Business, Columbus, OH.</p>
-          <div class="details">
-            <ul>
-              <li>Data & Strategy focus; FIGSA leadership; ACG Cup (M&A) bracket 2nd.</li>
-              <li>Projects in KPI design, dashboarding, and DCF modeling.</li>
-            </ul>
-          </div>
-        </div>
-      </li>
-
-      <!-- Education -->
-      <li>
-        <div class="tl-card edu" role="button" tabindex="0" aria-expanded="false">
-          <time>2019-2021</time>
-          <h3>University of Georgia — PhD in Engineering</h3>
-          <p>Athens, GA.</p>
-          <div class="details">
-            <ul>
-              <li></li>
-              <li></li>
-            </ul>
-          </div>
-        </div>
-      </li>
-
-      <!-- Work (leadership/activities) -->
-      <li>
-        <div class="tl-card work" role="button" tabindex="0" aria-expanded="false">
-          <time>Mar 2021–May 2023</time>
-          <h3>PATH Volleyball — Head Coach</h3>
-          <p>Player development; program improvement ~40% over two seasons.</p>
-          <div class="details">
-            <ul>
-              <li>Individualized training plans; culture & teamwork emphasis.</li>
-              <li>Game strategy, analytics, and feedback loops for athletes.</li>
-            </ul>
-          </div>
-        </div>
-      </li>
-    </ol>
-  </div>
-</section>
-
-
-    <!-- Panel 3: More Projects -->
-    <section id="s3" class="panel" aria-label="More Projects">
-      <div class="card">
-        <h2>More Projects</h2>
-        <p>
-          Swap this for thumbnails or a second hero. Add more sections by duplicating a
-          <code>section.panel</code> and a dot below.
-        </p>
-      </div>
-    </section>
-  </div>
-
-  <!-- Left section dots (now interactive) -->
-  <nav class="left-dots" aria-label="Section navigation">
-    <button type="button" data-target="#s1" aria-label="Go to section 1" aria-current="true"></button>
-    <button type="button" data-target="#s2" aria-label="Go to section 2"></button>
-    <button type="button" data-target="#s3" aria-label="Go to section 3"></button>
-  </nav>
-
-  <!-- Footer crumbs -->
-  <footer>© <span id="year"></span></footer>
-  <div class="sound">SOUND OFF</div>
-
-  <!-- Custom cursor elements -->
-  <div class="cursor-dot" id="cDot" aria-hidden="true"></div>
-
-  <script>
-    /* Year + clock */
-    document.getElementById('year').textContent = new Date().getFullYear();
-    function fmt(t){let h=t.getHours(),m=t.getMinutes();const am=h>=12?'PM':'AM';h=h%12||12;return `${h}:${String(m).padStart(2,'0')} ${am}`;}
-    const clockEl=document.getElementById('clock'); function tick(){clockEl.textContent=fmt(new Date());}
-    tick(); setInterval(tick,1000);
-
-    /* --------- Smooth section navigation (mouse, trackpad, keys) --------- */
-    const scroller = document.getElementById('scroller');
-    const sections = Array.from(document.querySelectorAll('section.panel'));
-    const dots = Array.from(document.querySelectorAll('.left-dots button'));
-
-    // Click dots to scroll
-    dots.forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const sel = btn.getAttribute('data-target');
-        const el = document.querySelector(sel);
-        if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); }
-      });
-    });
-
-    // Update active dot on scroll using IntersectionObserver
-    const io = new IntersectionObserver((entries)=>{
-      entries.forEach(entry=>{
-        if(entry.isIntersecting){
-          const id = '#'+entry.target.id;
-          dots.forEach(d => d.setAttribute('aria-current', String(d.getAttribute('data-target')===id)));
-        }
-      });
-    }, { root: scroller, threshold: 0.6 });
-    sections.forEach(s => io.observe(s));
-
-    // Keyboard helpers (PgDn/PgUp/Arrow keys/Space)
-    function goto(idx){
-      const clamped = Math.max(0, Math.min(idx, sections.length-1));
-      sections[clamped].scrollIntoView({behavior:'smooth', block:'start'});
-    }
-    document.addEventListener('keydown', e=>{
-      if (['ArrowDown','PageDown',' '].includes(e.key)){ e.preventDefault();
-        const i = sections.findIndex(s => s.getBoundingClientRect().top >= 0 && s.getBoundingClientRect().top < window.innerHeight/2);
-        goto((i===-1?0:i)+1);
-      } else if (['ArrowUp','PageUp'].includes(e.key)){ e.preventDefault();
-        const i = sections.findIndex(s => s.getBoundingClientRect().top >= 0 && s.getBoundingClientRect().top < window.innerHeight/2);
-        goto((i===-1?0:i)-1);
-      }
-    });
-
-    /* --------- Custom cursor (desktop) --------- */
-    const supportsFine = matchMedia('(pointer:fine)').matches;
-    if (supportsFine){
-      const dot = document.getElementById('cDot');
-      /*const ring = document.getElementById('cRing');*/
-      let x = window.innerWidth/2, y = window.innerHeight/2, rx=x, ry=y;
-
-      const lerp=(a,b,n)=>(1-n)*a+n*b;
-      function onMove(e){
-        x = e.clientX; y = e.clientY;
-        dot.style.transform = `translate(${x-3}px, ${y-3}px)`;
-      }
-      function loop(){
-        rx = lerp(rx, x, 0.18); ry = lerp(ry, y, 0.18);
-        ring.style.transform = `translate(${rx - (parseInt(getComputedStyle(ring).width)/2)}px, ${ry - (parseInt(getComputedStyle(ring).height)/2)}px)`;
-        requestAnimationFrame(loop);
-      }
-      window.addEventListener('mousemove', onMove, {passive:true});
-      loop();
-
-      // Enlarge ring on interactive elements
-      const hoverables = 'a, button, [role="button"], .hoverable, input, textarea, select';
-      document.addEventListener('mouseover', e=>{
-        if (e.target.closest(hoverables)) ring.classList.add('-hover');
-      });
-      document.addEventListener('mouseout', e=>{
-        if (e.target.closest(hoverables)) ring.classList.remove('-hover');
-      });
-
-      document.addEventListener('mouseleave', ()=> ring.style.opacity=.35);
-      document.addEventListener('mouseenter', ()=> ring.style.opacity=.75);
-    }
-  </script>
-  <script>
-document.addEventListener("DOMContentLoaded", () => {
-  // Columbus, Ohio
-  const CITY_NAME = "COLUMBUS";
-  const TZ = "America/New_York";
-  const LAT = 39.9612, LON = -82.9988;
-
-  const cityEl = document.getElementById("city");
-  const tempEl = document.getElementById("temp");
-  const clockEl = document.getElementById("clock");
-
-  if (cityEl) cityEl.textContent = CITY_NAME;
-
-  // Live clock in Columbus (handles DST automatically)
-  function updateClock() {
-    const now = new Date();
-    clockEl.textContent = new Intl.DateTimeFormat("en-US", {
-      hour: "2-digit", minute: "2-digit", hour12: true, timeZone: TZ
-    }).format(now);
-  }
-  updateClock();
-  setInterval(updateClock, 1000);
-
-  // Robust weather fetch with fallback
-  async function updateWeather() {
-    try {
-      // Try classic "current_weather"
-      const url1 = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current_weather=true&temperature_unit=fahrenheit&timezone=${encodeURIComponent(TZ)}`;
-      let res = await fetch(url1, { cache: "no-store", mode: "cors" });
-      let data = await res.json();
-      let t = Math.round(data?.current_weather?.temperature ?? NaN);
-      if (Number.isFinite(t)) { tempEl.textContent = `${t}°F`; return; }
-
-      // Fallback: newer "current=temperature_2m"
-      const url2 = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m&temperature_unit=fahrenheit&timezone=${encodeURIComponent(TZ)}`;
-      res = await fetch(url2, { cache: "no-store", mode: "cors" });
-      data = await res.json();
-      t = Math.round(data?.current?.temperature_2m ?? NaN);
-      if (Number.isFinite(t)) { tempEl.textContent = `${t}°F`; return; }
-
-      throw new Error("Temperature not found in API response");
-    } catch (err) {
-      console.error("Weather fetch failed:", err);
-      if (tempEl) tempEl.textContent = "—°F";
-    }
-  }
-
-  updateWeather();
-  // refresh every 10 minutes
-  setInterval(updateWeather, 10 * 60 * 1000);
-});
-
-// Reveal timeline items when the Info panel comes into view
-(() => {
-  const scroller = document.getElementById('scroller');           // your snap container
-  const items = document.querySelectorAll('#timeline li');
-
-  if (!items.length) return;
-
-  const io = new IntersectionObserver((entries)=>{
-    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in-view'); });
-  }, { root: scroller || null, threshold: 0.35 });
-
-  items.forEach(li => io.observe(li));
-})();
-// Toggle expand on click/tap and keyboard
-  (function(){
-    document.querySelectorAll('#s2 .tl-card').forEach(card => {
-      card.addEventListener('click', (e) => {
-        // Avoid following any nested links accidentally
-        e.preventDefault?.();
-        card.classList.toggle('is-expanded');
-        card.setAttribute('aria-expanded', card.classList.contains('is-expanded'));
-      });
-      card.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          card.classList.toggle('is-expanded');
-          card.setAttribute('aria-expanded', card.classList.contains('is-expanded'));
-        }
-      });
-    });
-  })();
-</script>
-
-
-  </body>
-</html>
+		
+		/* ── Timeline reveal animation ── */
+		(function(){
+			  const items = document.querySelectorAll('#timeline li');
+			  if(!items.length) return;
+			  const obs = new IntersectionObserver(entries => {
+				      entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('in-view'); });
+			  }, { root: scroller || null, threshold: 0.25 });
+			  items.forEach(li => obs.observe(li));
+		})();
+	
+	/* ── Timeline expand on click/tap ── */
+	document.querySelectorAll('#s2 .tl-card').forEach(card => {
+		  card.addEventListener('click', e => {
+			      e.preventDefault();
+			      card.classList.toggle('is-expanded');
+			      card.setAttribute('aria-expanded', card.classList.contains('is-expanded'));
+		  });
+		  card.addEventListener('keydown', e => {
+			      if(e.key === 'Enter' || e.key === ' '){
+					        e.preventDefault();
+					        card.classList.toggle('is-expanded');
+					        card.setAttribute('aria-expanded', card.classList.contains('is-expanded'));
+				  }
+		  });
+	});
+	</script>
+	</body>
+</html>html></footer></strong></li></li>
+													  </ul></p></h3></time>
+							</li></li>
+										  </ul></p></p>
+							</li></li>
+														  </ul></time>
+								</li>
+					</ol></h1>
+		</header>
+	</body>
+	</style></title>
+		</script>
+	</head>
