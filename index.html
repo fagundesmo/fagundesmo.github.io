@@ -207,6 +207,9 @@ footer{position:fixed;left:18px;bottom:16px;font-size:11px;opacity:.7;z-index:10
   display:flex;align-items:center;justify-content:space-between;
   gap:12px;margin-bottom:7px;
 }
+.spotify-actions{
+  display:flex;align-items:center;gap:8px;
+}
 .spotify-label{
   font-size:10px;letter-spacing:.1em;text-transform:uppercase;
   color:#666;font-weight:700;
@@ -218,6 +221,9 @@ footer{position:fixed;left:18px;bottom:16px;font-size:11px;opacity:.7;z-index:10
   cursor:pointer;
 }
 .spotify-btn:hover{background:#111;color:#fff;border-color:#111}
+.spotify-btn:disabled{
+  cursor:default;opacity:.55;background:#f2f2f2;color:#666;border-color:#e2e2e2;
+}
 .spotify-status{
   font-size:12px;line-height:1.35;color:#333;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
@@ -419,7 +425,10 @@ footer{position:fixed;left:18px;bottom:16px;font-size:11px;opacity:.7;z-index:10
 <div class="sound" aria-live="polite">
   <div class="spotify-row">
     <span class="spotify-label">Spotify</span>
-    <button type="button" class="spotify-btn" id="spotifyConnectBtn">Connect</button>
+    <div class="spotify-actions">
+      <button type="button" class="spotify-btn" id="spotifyMuteBtn" aria-pressed="false">Mute</button>
+      <button type="button" class="spotify-btn" id="spotifyConnectBtn">Connect</button>
+    </div>
   </div>
   <div class="spotify-status" id="spotifyNowPlaying">Set client ID to enable.</div>
 </div>
@@ -472,9 +481,12 @@ document.addEventListener('DOMContentLoaded', function() {
   var spotifyStateKey = 'spotify_oauth_state';
   var spotifyVerifierKey = 'spotify_code_verifier';
   var spotifyTokenKey = 'spotify_token_payload';
+  var spotifyMutedKey = 'spotify_widget_muted';
   var spotifyConnectBtn = document.getElementById('spotifyConnectBtn');
+  var spotifyMuteBtn = document.getElementById('spotifyMuteBtn');
   var spotifyNowPlayingEl = document.getElementById('spotifyNowPlaying');
   var spotifyPollHandle = null;
+  var spotifyMuted = localStorage.getItem(spotifyMutedKey) === '1';
 
   function setSpotifyStatus(message, isError) {
     if (!spotifyNowPlayingEl) return;
@@ -535,7 +547,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function updateSpotifyButton() {
     if (!spotifyConnectBtn) return;
-    spotifyConnectBtn.textContent = readSpotifyToken() ? 'Disconnect' : 'Connect';
+    if (readSpotifyToken()) {
+      spotifyConnectBtn.textContent = 'Connected';
+      spotifyConnectBtn.disabled = true;
+      spotifyConnectBtn.setAttribute('aria-disabled', 'true');
+      return;
+    }
+    spotifyConnectBtn.textContent = 'Connect';
+    spotifyConnectBtn.disabled = false;
+    spotifyConnectBtn.removeAttribute('aria-disabled');
+  }
+
+  function setSpotifyMuted(nextMuted) {
+    spotifyMuted = !!nextMuted;
+    localStorage.setItem(spotifyMutedKey, spotifyMuted ? '1' : '0');
+    if (!spotifyMuteBtn) return;
+    spotifyMuteBtn.textContent = spotifyMuted ? 'Unmute' : 'Mute';
+    spotifyMuteBtn.setAttribute('aria-pressed', spotifyMuted ? 'true' : 'false');
   }
 
   function getOAuthCallbackValues() {
@@ -679,6 +707,11 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
 
+    if (spotifyMuted) {
+      setSpotifyStatus('Spotify updates are muted.', false);
+      return;
+    }
+
     var resp = await fetch(SPOTIFY_NOW_PLAYING_URL, {
       headers: {Authorization: 'Bearer ' + accessToken},
       cache: 'no-store',
@@ -723,18 +756,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
   if (spotifyConnectBtn) {
     spotifyConnectBtn.addEventListener('click', function() {
-      if (readSpotifyToken()) {
-        clearSpotifyToken();
-        updateSpotifyButton();
-        setSpotifyStatus('Disconnected from Spotify.', false);
-        if (spotifyPollHandle) clearInterval(spotifyPollHandle);
-        return;
-      }
+      if (readSpotifyToken()) return;
       beginSpotifyAuth();
     });
   }
 
+  if (spotifyMuteBtn) {
+    spotifyMuteBtn.addEventListener('click', function() {
+      setSpotifyMuted(!spotifyMuted);
+      if (!spotifyMuted) refreshNowPlaying();
+      else setSpotifyStatus('Spotify updates are muted.', false);
+    });
+  }
+
   updateSpotifyButton();
+  setSpotifyMuted(spotifyMuted);
   handleSpotifyOAuthCallback()
     .catch(function() {
       setSpotifyStatus('Could not complete Spotify login.', true);
