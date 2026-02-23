@@ -19,4 +19,6 @@ Notes:
 - Required scopes are `user-read-currently-playing` and `user-read-playback-state`.
 - Tokens are stored in browser `localStorage` for your session.
 - Public users cannot click a Disconnect button anymore (connect-only UI).
-- `Mute` mutes widget updates/text only; this widget does not stream audio playback.
+- The widget includes a Spotify iFrame player for the current track URI.
+- Visitors can play that track in the embed player (subject to Spotify and browser playback rules).
+- `Mute` only mutes widget status updates; it does not control Spotify player audio.

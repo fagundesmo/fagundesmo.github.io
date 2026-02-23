@@ -229,6 +229,12 @@ footer{position:fixed;left:18px;bottom:16px;font-size:11px;opacity:.7;z-index:10
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .spotify-status.is-error{color:#9c2e2e}
+.spotify-embed-wrap{
+  margin-top:8px;border-radius:8px;overflow:hidden;
+  border:1px solid var(--muted);background:#fff;
+}
+.spotify-embed-wrap[hidden]{display:none}
+.spotify-embed{display:block;width:100%;height:80px;border:0}
 @media(pointer:fine){
   body{cursor:none}
   .cursor-dot,.cursor-ring{
@@ -431,6 +437,15 @@ footer{position:fixed;left:18px;bottom:16px;font-size:11px;opacity:.7;z-index:10
     </div>
   </div>
   <div class="spotify-status" id="spotifyNowPlaying">Set client ID to enable.</div>
+  <div class="spotify-embed-wrap" id="spotifyEmbedWrap" hidden>
+    <iframe
+      id="spotifyEmbed"
+      class="spotify-embed"
+      loading="lazy"
+      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+      title="Spotify track player"
+    ></iframe>
+  </div>
 </div>
 
 <div class="cursor-dot" id="cDot" aria-hidden="true"></div>
@@ -485,6 +500,9 @@ document.addEventListener('DOMContentLoaded', function() {
   var spotifyConnectBtn = document.getElementById('spotifyConnectBtn');
   var spotifyMuteBtn = document.getElementById('spotifyMuteBtn');
   var spotifyNowPlayingEl = document.getElementById('spotifyNowPlaying');
+  var spotifyEmbedWrap = document.getElementById('spotifyEmbedWrap');
+  var spotifyEmbed = document.getElementById('spotifyEmbed');
+  var spotifyEmbedTrackId = null;
   var spotifyPollHandle = null;
   var spotifyMuted = localStorage.getItem(spotifyMutedKey) === '1';
 
@@ -564,6 +582,23 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!spotifyMuteBtn) return;
     spotifyMuteBtn.textContent = spotifyMuted ? 'Unmute' : 'Mute';
     spotifyMuteBtn.setAttribute('aria-pressed', spotifyMuted ? 'true' : 'false');
+  }
+
+  function setSpotifyEmbedTrack(trackId) {
+    if (!spotifyEmbedWrap || !spotifyEmbed) return;
+    if (!trackId) {
+      spotifyEmbedWrap.hidden = true;
+      spotifyEmbedTrackId = null;
+      if (spotifyEmbed.src) spotifyEmbed.src = 'about:blank';
+      return;
+    }
+    if (spotifyEmbedTrackId === trackId) {
+      spotifyEmbedWrap.hidden = false;
+      return;
+    }
+    spotifyEmbedTrackId = trackId;
+    spotifyEmbed.src = 'https://open.spotify.com/embed/track/' + encodeURIComponent(trackId) + '?utm_source=generator';
+    spotifyEmbedWrap.hidden = false;
   }
 
   function getOAuthCallbackValues() {
@@ -699,11 +734,13 @@ document.addEventListener('DOMContentLoaded', function() {
       clearSpotifyToken();
       updateSpotifyButton();
       setSpotifyStatus('Session expired. Reconnect Spotify.', true);
+      setSpotifyEmbedTrack(null);
       return;
     }
 
     if (!accessToken) {
       setSpotifyStatus('Connect Spotify to show now playing.', false);
+      setSpotifyEmbedTrack(null);
       return;
     }
 
@@ -719,6 +756,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (resp.status === 204) {
       setSpotifyStatus('Nothing is playing right now.', false);
+      setSpotifyEmbedTrack(null);
       return;
     }
 
@@ -730,6 +768,7 @@ document.addEventListener('DOMContentLoaded', function() {
         clearSpotifyToken();
         updateSpotifyButton();
         setSpotifyStatus('Session expired. Reconnect Spotify.', true);
+        setSpotifyEmbedTrack(null);
         return;
       }
       resp = await fetch(SPOTIFY_NOW_PLAYING_URL, {
@@ -747,11 +786,20 @@ document.addEventListener('DOMContentLoaded', function() {
     var item = data && data.item;
     if (!item) {
       setSpotifyStatus('Nothing is playing right now.', false);
+      setSpotifyEmbedTrack(null);
       return;
     }
+
+    if (item.type !== 'track' || !item.id) {
+      setSpotifyStatus('Currently playing content is not a track.', false);
+      setSpotifyEmbedTrack(null);
+      return;
+    }
+
     var artists = (item.artists || []).map(function(a) { return a.name; }).join(', ');
     var state = data.is_playing ? 'Playing' : 'Paused';
     setSpotifyStatus(state + ': ' + item.name + (artists ? ' - ' + artists : ''), false);
+    setSpotifyEmbedTrack(item.id);
   }
 
   if (spotifyConnectBtn) {
